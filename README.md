@@ -1,73 +1,65 @@
-WhatsApp Group Manager (Baileys-Based)
-A Node.js automation tool built with the Baileys WebSocket library. This tool allows you to connect to WhatsApp via QR code, list your current groups, export member lists to CSV, and import members into groups using randomized "human-like" delays to protect your account from bans.
+📄 README.md
+Quantivo CRM | AI-Powered WhatsApp Automation
+A professional, high-performance CRM built on the Baileys V7 Engine, designed for bulk member management and AI-driven customer engagement.
 
-🚀 Features
-WebSocket Connection: Real-time connection without a headless browser.
+🚀 Key Features
+AI Auto-Reply: Integrated with Google Gemini 1.5 Flash for RAG-based automated responses.
 
-QR Authentication: Secure login with persistent session storage in ./auth_store.
+V7 Engine Power: Utilizes LID mapping and human-like delays to ensure account safety.
 
-Member Export: One-click extraction of group participants into formatted CSV files.
+Bulk Operations: Export group members to CSV and import contacts via Excel/CSV.
 
-Safe Import: Natural human behavior simulation using Gaussian Delays and "Coffee Breaks" during bulk additions.
+Knowledge Base: Fully customizable "brain" for the AI via the dashboard.
 
-Modular Architecture: Clean separation between connection logic and group management.
-
-🛠️ Installation
-1. Prerequisites
-Ensure you have Node.js (v16.x or higher) installed on your machine.
-
-2. Clone and Prepare
-Create your project directory and move the provided files into it:
+🛠️ Installation & Local Setup
+Clone the repository:
 
 Bash
-mkdir wa-group-manager
-cd wa-group-manager
-3. Install Dependencies
-Run the following command to install the required libraries:
+git clone <your-repo-link>
+cd bbidar-v2
+Install dependencies:
 
 Bash
-npm install @whiskeysockets/baileys qrcode-terminal csv-writer csv-parser
-4. Setup Folders
-Create an exports folder to store your CSV files:
+npm install
+Environment Setup:
+Ensure you have a settings.json and auth_store/ folder (managed by the app).
+
+Run the app:
 
 Bash
-mkdir exports
-📖 How to Run
-Step 1: Start the Application
-Launch the script using Node:
+node server.js
+Access at http://localhost:3000
+
+☁️ Cloudflare Deployment Guide (Cloudflare Tunnel)
+Since WhatsApp requires a persistent connection (Socket.io + Long-running process), you cannot run the server.js directly on a Cloudflare Worker. The best approach is to use Cloudflare Tunnel. This allows you to run the server on your local machine or a VPS in Yerevan while exposing it securely through a Cloudflare .dev or custom domain.
+
+1. Install Cloudflared
+On your server/machine, install the Cloudflare tunnel client:
+
+Linux: sudo apt install cloudflared
+
+Mac: brew install cloudflare/cloudflare/cloudflared
+
+2. Authenticate & Create Tunnel
+Bash
+cloudflared tunnel login
+cloudflared tunnel create quantivo-crm
+3. Route Traffic
+Replace your-domain.com with your actual domain or use a tunnel-specific hostname:
 
 Bash
-node index.js
-Step 2: Authentication
-A QR Code will appear in your terminal.
+cloudflared tunnel route dns quantivo-crm crm.your-domain.com
+4. Run the Tunnel
+Point the tunnel to your local Quantivo port:
 
-Open WhatsApp on your phone -> Settings -> Linked Devices -> Link a Device.
+Bash
+cloudflared tunnel run --url http://localhost:3000 quantivo-crm
+5. Why use this for Quantivo?
+No Open Ports: You don't need to open Port 3000 on your router or firewall.
 
-Scan the terminal QR code.
+SSL Included: Cloudflare provides the HTTPS certificate automatically.
 
-Your session will be saved in the /auth_store folder so you won't need to scan again.
+V7 Security: Since the code still runs on your machine, your auth_store (WhatsApp keys) stays local and never touches the cloud.
 
-Step 3: Group Selection & Export
-Once connected, the script will:
-
-Fetch all groups you are currently a member of.
-
-Display the list in the terminal.
-
-Automatically generate a CSV in the /exports folder for the selected group.
-
-🛡️ "Human-Way" Import Settings
-The system is pre-configured to avoid detection by WhatsApp's anti-spam algorithms:
-
-Variable Delay: Each "Add" action waits between 20 and 50 seconds (randomized).
-
-The Break Rule: After every 5 successful additions, the script pauses for 2 minutes to simulate a user taking a break.
-
-Privacy Handling: If a user has "Who can add me to groups" set to "My Contacts," the script handles the 403 error gracefully without crashing.
-
-⚠️ Safety Warnings
-Admin Rights: You must be an Admin of the target group to add members.
-
-Account Age: Do not use this tool for bulk adding on a brand-new WhatsApp account. "Warm up" the account by chatting manually for a few days first.
-
-Limits: Even with delays, avoid adding more than 50-100 people per day to stay under the radar.
+⚠️ Security Reminder
+As a software engineer, remember to keep your .env and settings.json out of your public commits.
