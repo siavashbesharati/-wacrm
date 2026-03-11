@@ -5,6 +5,7 @@ const qrcode = require('qrcode');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const {
     default: makeWASocket,
@@ -29,6 +30,56 @@ let sock;
 let groupsCache = [];
 let connectionStatus = 'disconnected';
 
+// --- SETTINGS MANAGEMENT ---
+const SETTINGS_FILE = './settings.json';
+let botSettings = {
+    apiKey: '',
+    knowledgeBase: '',
+    autoReply: false
+};
+
+// Load settings on startup
+if (fs.existsSync(SETTINGS_FILE)) {
+    try {
+        botSettings = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8'));
+    } catch (e) {
+        console.error("Error reading settings file:", e);
+    }
+}
+
+/**
+ * AI Logic: Gemini Integration
+ */
+async function getAiResponse(userMessage) {
+    if (!botSettings.apiKey || !botSettings.autoReply) return null;
+
+    try {
+        const genAI = new GoogleGenerativeAI(botSettings.apiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+        const prompt = `
+            You are a helpful AI assistant for Quantivo CRM. 
+            Use the following Knowledge Base to answer the user politely and professionally. 
+            
+            Knowledge Base:
+            ${botSettings.knowledgeBase}
+            
+            Instructions:
+            - If the answer isn't in the Knowledge Base, say you'll check with the team.
+            - Do not mention you are an AI unless asked.
+            - Keep responses concise.
+
+            User Question: ${userMessage}
+        `;
+
+        const result = await model.generateContent(prompt);
+        return result.response.text();
+    } catch (error) {
+        console.error("🤖 Gemini Error:", error.message);
+        return null;
+    }
+}
+
 /**
  * WhatsApp Connection Logic
  */
@@ -40,7 +91,6 @@ async function initWhatsApp() {
         version,
         auth: {
             creds: state.creds,
-            // makeCacheableSignalKeyStore is critical for v7 performance
             keys: makeCacheableSignalKeyStore(state.keys, console.log),
         },
         printQRInTerminal: false,
@@ -52,16 +102,33 @@ async function initWhatsApp() {
 
     sock.ev.on('creds.update', saveCreds);
 
-    // V7 Feature: Listen for new LID <-> Phone Number mappings
-    sock.ev.on('lid-mapping.update', (mappings) => {
-        for (const map of mappings) {
-            console.log(`📡 Mapping Sync: ${map.lid} is now linked to ${map.phoneNumber}`);
+    // --- AI AUTO-REPLY LISTENER ---
+    sock.ev.on('messages.upsert', async (m) => {
+        if (m.type === 'notify' && botSettings.autoReply) {
+            for (const msg of m.messages) {
+                // Ignore messages from ourselves or status updates
+                if (!msg.key.fromMe && msg.message) {
+                    const text = msg.message.conversation || msg.message.extendedTextMessage?.text;
+                    
+                    if (text) {
+                        console.log(`📩 New message from ${msg.key.remoteJid}: ${text}`);
+                        const aiReply = await getAiResponse(text);
+                        
+                        if (aiReply) {
+                            // Optional: Add a small delay to look more human
+                            await delay(2000); 
+                            await sock.sendMessage(msg.key.remoteJid, { text: aiReply });
+                            console.log(`📤 AI Replied to ${msg.key.remoteJid}`);
+                        }
+                    }
+                }
+            }
         }
     });
 
     sock.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect, qr } = update;
-        
+
         if (qr) {
             const qrImageUrl = await qrcode.toDataURL(qr);
             io.emit('qr', qrImageUrl);
@@ -69,7 +136,7 @@ async function initWhatsApp() {
 
         if (connection === 'open') {
             connectionStatus = 'connected';
-            console.log("✅ WhatsApp Connected (v7 Engine Ready)");
+            console.log("✅ WhatsApp Connected (Quantivo Engine Ready)");
 
             setTimeout(async () => {
                 const rawGroups = await sock.groupFetchAllParticipating();
@@ -77,7 +144,7 @@ async function initWhatsApp() {
                     id: g.id,
                     subject: g.subject,
                     memberCount: g.participants ? g.participants.length : 0,
-                    rawParticipants: g.participants // Kept for groupUtils lookup
+                    rawParticipants: g.participants 
                 }));
                 io.emit('status', { state: 'connected', groups: groupsCache });
             }, 3000);
@@ -87,7 +154,7 @@ async function initWhatsApp() {
             connectionStatus = 'disconnected';
             const statusCode = lastDisconnect?.error?.output?.statusCode;
             const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
-            
+
             console.log(`❌ Connection closed (Status: ${statusCode}). Reconnecting: ${shouldReconnect}`);
             if (shouldReconnect) initWhatsApp();
         }
@@ -98,33 +165,34 @@ async function initWhatsApp() {
  * API Routes
  */
 
-// LOGOUT: Securely wipe session and credentials
+// Settings Endpoints
+app.get('/api/settings', (req, res) => {
+    res.json(botSettings);
+});
+
+app.post('/api/settings', (req, res) => {
+    botSettings = { ...botSettings, ...req.body };
+    fs.writeFileSync(SETTINGS_FILE, JSON.stringify(botSettings, null, 2));
+    res.json({ success: true });
+});
+
+// Logout
 app.post('/logout', async (req, res) => {
     try {
-        console.log("🚪 Initiating logout...");
-        
-        if (sock) {
-            await sock.logout();
-        }
-
+        if (sock) await sock.logout();
         const authPath = path.join(__dirname, 'auth_store');
-        if (fs.existsSync(authPath)) {
-            fs.rmSync(authPath, { recursive: true, force: true });
-        }
-
+        if (fs.existsSync(authPath)) fs.rmSync(authPath, { recursive: true, force: true });
+        
         connectionStatus = 'disconnected';
         groupsCache = [];
-        
         res.json({ success: true });
-
-        // Restart to provide a fresh QR code
         setTimeout(() => initWhatsApp(), 1000);
     } catch (err) {
-        console.error("Logout Error:", err);
-        res.status(500).json({ error: "Failed to logout safely" });
+        res.status(500).json({ error: "Logout failed" });
     }
 });
 
+// Group Export
 app.get('/export/:groupId', async (req, res) => {
     try {
         const groupId = req.params.groupId;
@@ -132,7 +200,7 @@ app.get('/export/:groupId', async (req, res) => {
         const group = allGroups[groupId];
 
         if (group) {
-            await exportGroupMembers(group, sock); 
+            await exportGroupMembers(group, sock);
             const fileName = `${group.subject.replace(/[/\\?%*:|"<>\s]/g, '_')}.csv`;
             const filePath = path.join(__dirname, 'exports', fileName);
             setTimeout(() => res.download(filePath), 500);
@@ -144,6 +212,7 @@ app.get('/export/:groupId', async (req, res) => {
     }
 });
 
+// Member Import
 app.post('/upload-import', upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: "No file uploaded" });
     const { groupId } = req.body;
@@ -161,46 +230,29 @@ app.post('/upload-import', upload.single('file'), async (req, res) => {
 });
 
 /**
- * Background Import Logic (v7 Deep Search)
+ * Background Import Logic
  */
 async function processImports(groupId, memberList) {
-    const targetList = memberList.slice(0, 188); 
+    const targetList = memberList.slice(0, 188);
 
     for (let i = 0; i < targetList.length; i++) {
         let jid = targetList[i];
         const isLast = i === targetList.length - 1;
 
-        // v7 Step: Check if we should use a LID instead of the PN provided
-        try {
-            if (jid.endsWith('@s.whatsapp.net')) {
-                const pn = jid.split('@')[0];
-                const lid = await sock.signalRepository.lidMapping.getLIDForPN(pn);
-                if (lid) {
-                    console.log(`🔄 Mapping found: Using LID ${lid} for ${pn}`);
-                    jid = lid;
-                }
-            }
-        } catch (e) { /* No mapping yet */ }
-
-        // Human-like delay (30-45s) to avoid v7 ban triggers
         const wait = Math.floor(Math.random() * (45000 - 30000 + 1)) + 30000;
         io.emit('import-progress', { message: `⏳ Human Delay: ${wait / 1000}s... Adding ${jid}` });
         await delay(wait);
 
         try {
             const response = await sock.groupParticipantsUpdate(groupId, [jid], "add");
+            const status = response[0]?.status;
 
-            if (response && response[0]) {
-                const status = response[0].status;
-                if (status === "200") {
-                    io.emit('import-progress', { status: 'success', message: `✅ Added: ${jid}`, done: isLast });
-                } else if (status === "403") {
-                    io.emit('import-progress', { status: 'warn', message: `⚠️ Privacy: Invite sent to ${jid}`, done: isLast });
-                } else {
-                    io.emit('import-progress', { status: 'error', message: `❌ Status ${status}: ${jid}`, done: isLast });
-                }
+            if (status === "200") {
+                io.emit('import-progress', { status: 'success', message: `✅ Added: ${jid}`, done: isLast });
+            } else if (status === "403") {
+                io.emit('import-progress', { status: 'warn', message: `⚠️ Privacy: Invite sent to ${jid}`, done: isLast });
             } else {
-                io.emit('import-progress', { status: 'error', message: `❌ No response for ${jid}`, done: isLast });
+                io.emit('import-progress', { status: 'error', message: `❌ Status ${status}: ${jid}`, done: isLast });
             }
         } catch (e) {
             io.emit('import-progress', { status: 'error', message: `❌ Request Error: ${e.message}`, done: isLast });
@@ -208,9 +260,6 @@ async function processImports(groupId, memberList) {
     }
 }
 
-/**
- * Dashboard Real-time sync
- */
 io.on('connection', (socket) => {
     if (connectionStatus === 'connected') {
         socket.emit('status', { state: 'connected', groups: groupsCache });

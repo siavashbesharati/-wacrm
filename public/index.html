@@ -57,6 +57,12 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
+        nav {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
         .nav-item {
             padding: 14px 18px;
             cursor: pointer;
@@ -106,13 +112,6 @@
             display: block;
         }
 
-        nav {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            /* Allows margin-top: auto to work */
-        }
-
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -125,7 +124,7 @@
             }
         }
 
-        /* Modern Card Component */
+        /* Card Component */
         .card {
             background: var(--white);
             padding: 30px;
@@ -135,7 +134,6 @@
             margin-bottom: 30px;
         }
 
-        /* Status Indicator */
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -176,11 +174,6 @@
             outline: none;
         }
 
-        select:focus {
-            border-color: var(--primary);
-            ring: 2px solid var(--primary);
-        }
-
         .btn-primary {
             background: var(--primary);
             color: white;
@@ -194,50 +187,9 @@
             box-shadow: 0 4px 14px 0 rgba(37, 211, 102, 0.39);
         }
 
-        .btn-primary:hover {
-            background: var(--primary-dark);
-            transform: translateY(-1px);
-        }
-
         .btn-primary:disabled {
             background: #cbd5e1;
             box-shadow: none;
-            cursor: not-allowed;
-        }
-
-        /* Table Design */
-        table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0 8px;
-        }
-
-        th {
-            text-align: left;
-            padding: 15px;
-            color: var(--text-muted);
-            font-weight: 600;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-        }
-
-        td {
-            background: white;
-            padding: 20px 15px;
-            border-top: 1px solid var(--border);
-            border-bottom: 1px solid var(--border);
-        }
-
-        td:first-child {
-            border-left: 1px solid var(--border);
-            border-radius: 12px 0 0 12px;
-            font-weight: 600;
-        }
-
-        td:last-child {
-            border-right: 1px solid var(--border);
-            border-radius: 0 12px 12px 0;
-            text-align: right;
         }
 
         /* Log Terminal */
@@ -251,7 +203,6 @@
             height: 300px;
             overflow-y: auto;
             margin-top: 20px;
-            line-height: 1.6;
         }
 
         .log-entry {
@@ -275,25 +226,41 @@
             border-color: #f43f5e;
         }
 
-        /* QR Styling */
-        #qr-container img {
-            border-radius: var(--radius);
-            border: 8px solid white;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        /* Logout Overlay */
+        #logout-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.9);
+            z-index: 9999;
+            color: white;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
         }
     </style>
 </head>
 
 <body>
 
+    <div id="logout-overlay">
+        <p>🚪 Wiping session and disconnecting...</p>
+    </div>
+
     <aside id="sidebar">
         <div class="logo">QUANTIVO</div>
         <nav>
-            <div class="nav-item active" onclick="showPage('overview-page')"><span>🏠</span> &nbsp; System Overview
-            </div>
-            <div class="nav-item" onclick="showPage('groups-page')"><span>🌍</span> &nbsp; Group List</div>
-            <div class="nav-item" onclick="showPage('add-members-page')"><span>➕</span> &nbsp; Add Members</div>
-            <div class="nav-item" onclick="handleLogout()" style="margin-top: auto; color: #f43f5e;">
+            <div class="nav-item active" onclick="showPage('overview-page', event)"><span>🏠</span> &nbsp; System
+                Overview</div>
+            <div class="nav-item" onclick="showPage('groups-page', event)"><span>🌍</span> &nbsp; Group List</div>
+            <div class="nav-item" onclick="showPage('add-members-page', event)"><span>➕</span> &nbsp; Add Members</div>
+            <div class="nav-item" onclick="showPage('settings-page', event)"><span>⚙️</span> &nbsp; AI Settings</div>
+
+            <div class="nav-item" onclick="handleLogout(event)" style="margin-top: auto; color: #f43f5e;">
                 <span>🚪</span> &nbsp; Logout Session
             </div>
         </nav>
@@ -317,12 +284,12 @@
         <div id="groups-page" class="page">
             <h1>Participated Groups</h1>
             <div style="overflow-x: auto;">
-                <table>
+                <table style="width: 100%; border-collapse: collapse;">
                     <thead>
-                        <tr>
-                            <th>Group Name</th>
+                        <tr style="text-align: left; color: var(--text-muted);">
+                            <th style="padding: 15px;">Group Name</th>
                             <th>Members</th>
-                            <th>Actions</th>
+                            <th style="text-align: right;">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="all-groups-list"></tbody>
@@ -352,17 +319,47 @@
                 </div>
             </div>
         </div>
+
+        <div id="settings-page" class="page">
+            <h1>AI Automation Settings</h1>
+            <div class="card">
+                <div class="form-group" style="display: flex; align-items: center; justify-content: space-between;">
+                    <label style="margin-bottom: 0;">Enable Auto-Reply</label>
+                    <input type="checkbox" id="ai-toggle" style="width: 40px; height: 20px; cursor: pointer;">
+                </div>
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
+                <div class="form-group">
+                    <label>Gemini API Key</label>
+                    <input type="text" id="ai-apikey" placeholder="Enter your Google Gemini API Key">
+                </div>
+                <div class="form-group">
+                    <label>Knowledge Base (Context for AI)</label>
+                    <textarea id="ai-kb"
+                        style="width: 100%; height: 200px; padding: 15px; border-radius: var(--radius); border: 1px solid var(--border); font-family: inherit;"
+                        placeholder="Describe your business, prices, and services here..."></textarea>
+                </div>
+                <button class="btn-primary" onclick="saveSettings()">💾 Save AI Configuration</button>
+            </div>
+        </div>
     </main>
 
     <script>
         const socket = io();
         let currentGroups = [];
 
-        function showPage(pageId) {
+        // FIXED: Added event parameter and stopPropagation check
+        function showPage(pageId, event) {
+            if (event) event.stopPropagation();
+
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
             document.getElementById(pageId).classList.add('active');
-            event.currentTarget.classList.add('active');
+
+            // Only add active class if it was triggered by a click (not auto-load)
+            if (event && event.currentTarget) {
+                event.currentTarget.classList.add('active');
+            }
         }
 
         socket.on('status', (data) => {
@@ -383,6 +380,7 @@
             document.getElementById('qr-container').style.display = 'block';
             document.getElementById('qr-img').src = url;
             document.getElementById('status-badge').innerText = "Awaiting Scan";
+            document.getElementById('status-badge').className = "status-badge";
         });
 
         function updateGroupUI() {
@@ -398,10 +396,11 @@
                 opt.innerText = `${g.subject} (${g.memberCount})`;
                 select.appendChild(opt);
 
-                list.innerHTML += `<tr>
-                    <td>${g.subject}</td>
-                    <td><span style="color:var(--text-muted)">${g.memberCount} members</span></td>
-                    <td><a href="/export/${g.id}" style="color:var(--primary); text-decoration:none; font-weight:700; font-size:0.9rem;">EXPORT CSV</a></td>
+                list.innerHTML += `
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 20px 15px; font-weight: 600;">${g.subject}</td>
+                    <td style="color:var(--text-muted)">${g.memberCount} members</td>
+                    <td style="text-align: right;"><a href="/export/${g.id}" style="color:var(--primary); text-decoration:none; font-weight:700;">EXPORT CSV</a></td>
                 </tr>`;
             });
         }
@@ -450,27 +449,52 @@
             if (data.done) document.getElementById('start-btn').disabled = false;
         });
 
+        // FIXED: handleLogout now prevents propagation and uses an overlay
+        async function handleLogout(event) {
+            if (event) event.stopPropagation();
 
-        async function handleLogout() {
             if (confirm("Are you sure? This will disconnect WhatsApp and require a new QR scan.")) {
                 try {
-                    const response = await fetch('/logout', { method: 'POST' });
-                    const result = await response.json();
-                    if (result.success) {
-                        // Reset UI state
-                        document.getElementById('status-badge').className = "status-badge";
-                        document.getElementById('status-badge').innerText = "Disconnected";
-                        document.getElementById('status-text').innerText = "Session cleared. Please wait for a new QR code...";
-                        showPage('overview-page');
+                    document.getElementById('logout-overlay').style.display = 'flex';
 
-                        // Refreshing after a short delay ensures the backend has deleted files
-                        setTimeout(() => window.location.reload(), 2000);
+                    const response = await fetch('/logout', { method: 'POST' });
+                    if (response.ok) {
+                        // Small delay to let the backend finish deleting files
+                        setTimeout(() => window.location.reload(), 1500);
                     }
                 } catch (err) {
+                    document.getElementById('logout-overlay').style.display = 'none';
                     alert("Logout failed: " + err.message);
                 }
             }
         }
+
+        async function loadSettings() {
+            const res = await fetch('/api/settings');
+            const settings = await res.json();
+            document.getElementById('ai-toggle').checked = settings.autoReply;
+            document.getElementById('ai-apikey').value = settings.apiKey;
+            document.getElementById('ai-kb').value = settings.knowledgeBase;
+        }
+
+        async function saveSettings() {
+            const settings = {
+                autoReply: document.getElementById('ai-toggle').checked,
+                apiKey: document.getElementById('ai-apikey').value,
+                knowledgeBase: document.getElementById('ai-kb').value
+            };
+
+            const res = await fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(settings)
+            });
+
+            if (res.ok) alert("Settings saved successfully!");
+        }
+
+        // Call loadSettings when the app starts
+        window.onload = loadSettings;
     </script>
 </body>
 
