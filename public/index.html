@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Quantivo CRM | Add Members</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        :root { --sidebar-width: 260px; --primary: #25d366; --dark: #075e54; --bg: #f0f2f5; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; background: var(--bg); height: 100vh; }
+        
+        /* Sidebar */
+        #sidebar { width: var(--sidebar-width); background: var(--dark); color: white; display: flex; flex-direction: column; }
+        #sidebar .logo { padding: 25px 20px; font-weight: 800; font-size: 1.4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .nav-item { padding: 15px 20px; cursor: pointer; transition: 0.2s; font-weight: 500; }
+        .nav-item:hover, .nav-item.active { background: var(--primary); color: white; }
+
+        /* Content */
+        #main-content { flex: 1; padding: 40px; overflow-y: auto; }
+        .page { display: none; }
+        .page.active { display: block; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width: 700px; }
+
+        /* Form Elements */
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #444; }
+        select, input[type="file"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
+        .btn-submit { background: var(--primary); color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: bold; width: 100%; margin-top: 10px; }
+        .btn-submit:disabled { background: #ccc; cursor: not-allowed; }
+
+        /* Progress Log */
+        #log-container { margin-top: 30px; background: #1e1e1e; color: #adadad; padding: 20px; border-radius: 10px; font-family: 'Consolas', monospace; font-size: 13px; height: 250px; overflow-y: auto; }
+        .log-entry { margin-bottom: 5px; border-left: 3px solid #444; padding-left: 10px; }
+        .log-success { color: #25d366; border-color: #25d366; }
+        .log-warn { color: #ffcc00; border-color: #ffcc00; }
+        .log-error { color: #ff4b4b; border-color: #ff4b4b; }
+    </style>
+</head>
+<body>
+
+    <aside id="sidebar">
+        <div class="logo">QUANTIVO</div>
+        <nav>
+            <div class="nav-item active" onclick="showPage('overview-page')">🏠 Overview</div>
+            <div class="nav-item" onclick="showPage('groups-page')">🌍 All Groups</div>
+            <div class="nav-item" onclick="showPage('add-members-page')">➕ Add Members to Groups</div>
+        </nav>
+    </aside>
+
+    <main id="main-content">
+        <div id="overview-page" class="page active">
+            <h1>System Status</h1>
+            <div class="card">
+                <p id="status-text">Connecting to server...</p>
+                <div id="qr-container" style="display:none; text-align: center;">
+                    <img id="qr-img" src="" width="200">
+                    <p>Scan with WhatsApp</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="groups-page" class="page">
+            <h1>Participated Groups</h1>
+            <div class="card" style="max-width: 100%;">
+                <table style="width:100%; border-collapse: collapse;">
+                    <thead><tr style="text-align:left; border-bottom:2px solid #eee;"><th>Name</th><th>Members</th><th>Action</th></tr></thead>
+                    <tbody id="all-groups-list"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="add-members-page" class="page">
+            <h1>Add Members to Groups</h1>
+            <div class="card">
+                <div class="form-group">
+                    <label>1. Select Target Group</label>
+                    <select id="group-select">
+                        <option value="">-- Choose a group --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>2. Upload Excel/CSV File</label>
+                    <input type="file" id="file-input" accept=".xlsx, .xls, .csv">
+                    <small style="color: #888;">File must have a 'WhatsApp ID' or 'Phone' column.</small>
+                </div>
+
+                <button id="start-btn" class="btn-submit" onclick="startImport()">🚀 Start Import Process</button>
+
+                <div id="log-container">
+                    <div class="log-entry">Waiting for input...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const socket = io();
+        let currentGroups = [];
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        socket.on('status', (data) => {
+            if (data.state === 'connected') {
+                document.getElementById('qr-container').style.display = 'none';
+                document.getElementById('status-text').innerText = "✅ WhatsApp Connected";
+                currentGroups = data.groups;
+                updateGroupUI();
+            }
+        });
+
+        socket.on('qr', (url) => {
+            document.getElementById('qr-container').style.display = 'block';
+            document.getElementById('qr-img').src = url;
+        });
+
+        function updateGroupUI() {
+            const select = document.getElementById('group-select');
+            const list = document.getElementById('all-groups-list');
+            
+            select.innerHTML = '<option value="">-- Choose a group --</option>';
+            list.innerHTML = '';
+
+            currentGroups.forEach(g => {
+                // Fill Dropdown
+                const opt = document.createElement('option');
+                opt.value = g.id;
+                opt.innerText = `${g.subject} (${g.memberCount} members)`;
+                select.appendChild(opt);
+
+                // Fill Table
+                list.innerHTML += `<tr style="border-bottom:1px solid #eee; height:50px;">
+                    <td>${g.subject}</td>
+                    <td>${g.memberCount}</td>
+                    <td><a href="/export/${g.id}" style="color:var(--primary); text-decoration:none; font-weight:bold;">Export</a></td>
+                </tr>`;
+            });
+        }
+
+        // --- Import Logic ---
+        function addLog(msg, type = '') {
+            const container = document.getElementById('log-container');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type ? 'log-' + type : ''}`;
+            entry.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            container.appendChild(entry);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function startImport() {
+            const groupId = document.getElementById('group-select').value;
+            const file = document.getElementById('file-input').files[0];
+
+            if (!groupId || !file) {
+                alert("Please select a group and a file first!");
+                return;
+            }
+
+            document.getElementById('start-btn').disabled = true;
+            addLog(`Starting import for group: ${groupId}`, 'success');
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('groupId', groupId);
+
+            try {
+                const response = await fetch('/upload-import', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                addLog(`File parsed. Found ${result.count} contacts.`, 'success');
+            } catch (err) {
+                addLog(`Error: ${err.message}`, 'error');
+                document.getElementById('start-btn').disabled = false;
+            }
+        }
+
+        // Listen for real-time progress from server
+        socket.on('import-progress', (data) => {
+            let type = '';
+            if (data.status === 'success') type = 'success';
+            if (data.status === 'warn') type = 'warn';
+            if (data.status === 'error') type = 'error';
+            
+            addLog(data.message, type);
+            
+            if (data.done) {
+                document.getElementById('start-btn').disabled = false;
+                addLog("🏁 Process Completed.", "success");
+            }
+        });
+    </script>
+</body>
+</html>
