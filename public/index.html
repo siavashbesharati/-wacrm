@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,8 +21,11 @@
             --radius: 12px;
         }
 
-        * { box-sizing: border-box; transition: all 0.2s ease; }
-        
+        * {
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             margin: 0;
@@ -40,7 +44,7 @@
             display: flex;
             flex-direction: column;
             padding: 20px;
-            box-shadow: 4px 0 10px rgba(0,0,0,0.05);
+            box-shadow: 4px 0 10px rgba(0, 0, 0, 0.05);
         }
 
         #sidebar .logo {
@@ -50,7 +54,7 @@
             padding: 20px 10px;
             margin-bottom: 30px;
             color: var(--primary);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .nav-item {
@@ -65,8 +69,16 @@
             text-decoration: none;
         }
 
-        .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
-        .nav-item.active { background: var(--primary); color: white; box-shadow: 0 10px 15px -3px rgba(37, 211, 102, 0.3); }
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 10px 15px -3px rgba(37, 211, 102, 0.3);
+        }
 
         /* Main Content Area */
         #main-content {
@@ -76,12 +88,42 @@
             position: relative;
         }
 
-        h1 { font-weight: 700; font-size: 1.8rem; margin-bottom: 30px; color: var(--dark); }
+        h1 {
+            font-weight: 700;
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            color: var(--dark);
+        }
 
-        .page { display: none; max-width: 1000px; margin: 0 auto; animation: fadeIn 0.4s ease; }
-        .page.active { display: block; }
+        .page {
+            display: none;
+            max-width: 1000px;
+            margin: 0 auto;
+            animation: fadeIn 0.4s ease;
+        }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .page.active {
+            display: block;
+        }
+
+        nav {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            /* Allows margin-top: auto to work */
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
         /* Modern Card Component */
         .card {
@@ -104,13 +146,27 @@
             background: #fee2e2;
             color: #ef4444;
         }
-        .status-badge.online { background: #dcfce7; color: #16a34a; }
+
+        .status-badge.online {
+            background: #dcfce7;
+            color: #16a34a;
+        }
 
         /* Form Controls */
-        .form-group { margin-bottom: 25px; }
-        label { display: block; margin-bottom: 10px; font-weight: 600; font-size: 0.9rem; color: var(--text-muted); }
-        
-        select, input[type="file"] {
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        select,
+        input[type="file"] {
             width: 100%;
             padding: 14px;
             border: 1px solid var(--border);
@@ -119,7 +175,11 @@
             font-size: 1rem;
             outline: none;
         }
-        select:focus { border-color: var(--primary); ring: 2px solid var(--primary); }
+
+        select:focus {
+            border-color: var(--primary);
+            ring: 2px solid var(--primary);
+        }
 
         .btn-primary {
             background: var(--primary);
@@ -133,15 +193,52 @@
             font-size: 1rem;
             box-shadow: 0 4px 14px 0 rgba(37, 211, 102, 0.39);
         }
-        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
-        .btn-primary:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:disabled {
+            background: #cbd5e1;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
 
         /* Table Design */
-        table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
-        th { text-align: left; padding: 15px; color: var(--text-muted); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; }
-        td { background: white; padding: 20px 15px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-        td:first-child { border-left: 1px solid var(--border); border-radius: 12px 0 0 12px; font-weight: 600; }
-        td:last-child { border-right: 1px solid var(--border); border-radius: 0 12px 12px 0; text-align: right; }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+
+        th {
+            text-align: left;
+            padding: 15px;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        td {
+            background: white;
+            padding: 20px 15px;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        td:first-child {
+            border-left: 1px solid var(--border);
+            border-radius: 12px 0 0 12px;
+            font-weight: 600;
+        }
+
+        td:last-child {
+            border-right: 1px solid var(--border);
+            border-radius: 0 12px 12px 0;
+            text-align: right;
+        }
 
         /* Log Terminal */
         #log-container {
@@ -156,23 +253,49 @@
             margin-top: 20px;
             line-height: 1.6;
         }
-        .log-entry { margin-bottom: 8px; border-left: 2px solid #334155; padding-left: 12px; }
-        .log-success { color: var(--primary); border-color: var(--primary); }
-        .log-warn { color: #f59e0b; border-color: #f59e0b; }
-        .log-error { color: #f43f5e; border-color: #f43f5e; }
+
+        .log-entry {
+            margin-bottom: 8px;
+            border-left: 2px solid #334155;
+            padding-left: 12px;
+        }
+
+        .log-success {
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .log-warn {
+            color: #f59e0b;
+            border-color: #f59e0b;
+        }
+
+        .log-error {
+            color: #f43f5e;
+            border-color: #f43f5e;
+        }
 
         /* QR Styling */
-        #qr-container img { border-radius: var(--radius); border: 8px solid white; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        #qr-container img {
+            border-radius: var(--radius);
+            border: 8px solid white;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
+
 <body>
 
     <aside id="sidebar">
         <div class="logo">QUANTIVO</div>
         <nav>
-            <div class="nav-item active" onclick="showPage('overview-page')"><span>🏠</span> &nbsp; System Overview</div>
+            <div class="nav-item active" onclick="showPage('overview-page')"><span>🏠</span> &nbsp; System Overview
+            </div>
             <div class="nav-item" onclick="showPage('groups-page')"><span>🌍</span> &nbsp; Group List</div>
             <div class="nav-item" onclick="showPage('add-members-page')"><span>➕</span> &nbsp; Add Members</div>
+            <div class="nav-item" onclick="handleLogout()" style="margin-top: auto; color: #f43f5e;">
+                <span>🚪</span> &nbsp; Logout Session
+            </div>
         </nav>
     </aside>
 
@@ -181,8 +304,9 @@
             <h1>System Status</h1>
             <div class="card">
                 <div id="status-badge" class="status-badge">Disconnected</div>
-                <p id="status-text" style="margin-top: 15px; color: var(--text-muted);">Initializing WhatsApp module...</p>
-                
+                <p id="status-text" style="margin-top: 15px; color: var(--text-muted);">Initializing WhatsApp module...
+                </p>
+
                 <div id="qr-container" style="display:none; text-align: center; margin-top: 30px;">
                     <img id="qr-img" src="" width="260">
                     <p style="margin-top: 20px; font-weight: 600;">Scan to connect your account</p>
@@ -264,7 +388,7 @@
         function updateGroupUI() {
             const select = document.getElementById('group-select');
             const list = document.getElementById('all-groups-list');
-            
+
             select.innerHTML = '<option value="">-- Select a group --</option>';
             list.innerHTML = '';
 
@@ -325,6 +449,29 @@
             addLog(data.message, type);
             if (data.done) document.getElementById('start-btn').disabled = false;
         });
+
+
+        async function handleLogout() {
+            if (confirm("Are you sure? This will disconnect WhatsApp and require a new QR scan.")) {
+                try {
+                    const response = await fetch('/logout', { method: 'POST' });
+                    const result = await response.json();
+                    if (result.success) {
+                        // Reset UI state
+                        document.getElementById('status-badge').className = "status-badge";
+                        document.getElementById('status-badge').innerText = "Disconnected";
+                        document.getElementById('status-text').innerText = "Session cleared. Please wait for a new QR code...";
+                        showPage('overview-page');
+
+                        // Refreshing after a short delay ensures the backend has deleted files
+                        setTimeout(() => window.location.reload(), 2000);
+                    }
+                } catch (err) {
+                    alert("Logout failed: " + err.message);
+                }
+            }
+        }
     </script>
 </body>
+
 </html>
