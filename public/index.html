@@ -2,37 +2,167 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Quantivo CRM | Add Members</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantivo CRM | Dashboard</title>
     <script src="/socket.io/socket.io.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --sidebar-width: 260px; --primary: #25d366; --dark: #075e54; --bg: #f0f2f5; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; background: var(--bg); height: 100vh; }
+        :root {
+            --primary: #25d366;
+            --primary-dark: #1da851;
+            --dark: #0f172a;
+            --sidebar-bg: #1e293b;
+            --bg: #f8fafc;
+            --white: #ffffff;
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+        }
+
+        * { box-sizing: border-box; transition: all 0.2s ease; }
         
-        /* Sidebar */
-        #sidebar { width: var(--sidebar-width); background: var(--dark); color: white; display: flex; flex-direction: column; }
-        #sidebar .logo { padding: 25px 20px; font-weight: 800; font-size: 1.4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .nav-item { padding: 15px 20px; cursor: pointer; transition: 0.2s; font-weight: 500; }
-        .nav-item:hover, .nav-item.active { background: var(--primary); color: white; }
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            display: flex;
+            background: var(--bg);
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+        }
 
-        /* Content */
-        #main-content { flex: 1; padding: 40px; overflow-y: auto; }
-        .page { display: none; }
+        /* Sidebar Navigation */
+        #sidebar {
+            width: 280px;
+            background: var(--sidebar-bg);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.05);
+        }
+
+        #sidebar .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            padding: 20px 10px;
+            margin-bottom: 30px;
+            color: var(--primary);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .nav-item {
+            padding: 14px 18px;
+            cursor: pointer;
+            border-radius: var(--radius);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            color: #cbd5e1;
+            text-decoration: none;
+        }
+
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+        .nav-item.active { background: var(--primary); color: white; box-shadow: 0 10px 15px -3px rgba(37, 211, 102, 0.3); }
+
+        /* Main Content Area */
+        #main-content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        h1 { font-weight: 700; font-size: 1.8rem; margin-bottom: 30px; color: var(--dark); }
+
+        .page { display: none; max-width: 1000px; margin: 0 auto; animation: fadeIn 0.4s ease; }
         .page.active { display: block; }
-        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width: 700px; }
 
-        /* Form Elements */
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; color: #444; }
-        select, input[type="file"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
-        .btn-submit { background: var(--primary); color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: bold; width: 100%; margin-top: 10px; }
-        .btn-submit:disabled { background: #ccc; cursor: not-allowed; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Progress Log */
-        #log-container { margin-top: 30px; background: #1e1e1e; color: #adadad; padding: 20px; border-radius: 10px; font-family: 'Consolas', monospace; font-size: 13px; height: 250px; overflow-y: auto; }
-        .log-entry { margin-bottom: 5px; border-left: 3px solid #444; padding-left: 10px; }
-        .log-success { color: #25d366; border-color: #25d366; }
-        .log-warn { color: #ffcc00; border-color: #ffcc00; }
-        .log-error { color: #ff4b4b; border-color: #ff4b4b; }
+        /* Modern Card Component */
+        .card {
+            background: var(--white);
+            padding: 30px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        /* Status Indicator */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: #fee2e2;
+            color: #ef4444;
+        }
+        .status-badge.online { background: #dcfce7; color: #16a34a; }
+
+        /* Form Controls */
+        .form-group { margin-bottom: 25px; }
+        label { display: block; margin-bottom: 10px; font-weight: 600; font-size: 0.9rem; color: var(--text-muted); }
+        
+        select, input[type="file"] {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: #fcfcfc;
+            font-size: 1rem;
+            outline: none;
+        }
+        select:focus { border-color: var(--primary); ring: 2px solid var(--primary); }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 16px 24px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-weight: 700;
+            width: 100%;
+            font-size: 1rem;
+            box-shadow: 0 4px 14px 0 rgba(37, 211, 102, 0.39);
+        }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        .btn-primary:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; }
+
+        /* Table Design */
+        table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+        th { text-align: left; padding: 15px; color: var(--text-muted); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; }
+        td { background: white; padding: 20px 15px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+        td:first-child { border-left: 1px solid var(--border); border-radius: 12px 0 0 12px; font-weight: 600; }
+        td:last-child { border-right: 1px solid var(--border); border-radius: 0 12px 12px 0; text-align: right; }
+
+        /* Log Terminal */
+        #log-container {
+            background: #0f172a;
+            color: #94a3b8;
+            padding: 20px;
+            border-radius: var(--radius);
+            font-family: 'SFMono-Regular', Consolas, monospace;
+            font-size: 0.85rem;
+            height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+        .log-entry { margin-bottom: 8px; border-left: 2px solid #334155; padding-left: 12px; }
+        .log-success { color: var(--primary); border-color: var(--primary); }
+        .log-warn { color: #f59e0b; border-color: #f59e0b; }
+        .log-error { color: #f43f5e; border-color: #f43f5e; }
+
+        /* QR Styling */
+        #qr-container img { border-radius: var(--radius); border: 8px solid white; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
@@ -40,9 +170,9 @@
     <aside id="sidebar">
         <div class="logo">QUANTIVO</div>
         <nav>
-            <div class="nav-item active" onclick="showPage('overview-page')">🏠 Overview</div>
-            <div class="nav-item" onclick="showPage('groups-page')">🌍 All Groups</div>
-            <div class="nav-item" onclick="showPage('add-members-page')">➕ Add Members to Groups</div>
+            <div class="nav-item active" onclick="showPage('overview-page')"><span>🏠</span> &nbsp; System Overview</div>
+            <div class="nav-item" onclick="showPage('groups-page')"><span>🌍</span> &nbsp; Group List</div>
+            <div class="nav-item" onclick="showPage('add-members-page')"><span>➕</span> &nbsp; Add Members</div>
         </nav>
     </aside>
 
@@ -50,44 +180,51 @@
         <div id="overview-page" class="page active">
             <h1>System Status</h1>
             <div class="card">
-                <p id="status-text">Connecting to server...</p>
-                <div id="qr-container" style="display:none; text-align: center;">
-                    <img id="qr-img" src="" width="200">
-                    <p>Scan with WhatsApp</p>
+                <div id="status-badge" class="status-badge">Disconnected</div>
+                <p id="status-text" style="margin-top: 15px; color: var(--text-muted);">Initializing WhatsApp module...</p>
+                
+                <div id="qr-container" style="display:none; text-align: center; margin-top: 30px;">
+                    <img id="qr-img" src="" width="260">
+                    <p style="margin-top: 20px; font-weight: 600;">Scan to connect your account</p>
                 </div>
             </div>
         </div>
 
         <div id="groups-page" class="page">
             <h1>Participated Groups</h1>
-            <div class="card" style="max-width: 100%;">
-                <table style="width:100%; border-collapse: collapse;">
-                    <thead><tr style="text-align:left; border-bottom:2px solid #eee;"><th>Name</th><th>Members</th><th>Action</th></tr></thead>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Group Name</th>
+                            <th>Members</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
                     <tbody id="all-groups-list"></tbody>
                 </table>
             </div>
         </div>
 
         <div id="add-members-page" class="page">
-            <h1>Add Members to Groups</h1>
+            <h1>Bulk Member Import</h1>
             <div class="card">
                 <div class="form-group">
-                    <label>1. Select Target Group</label>
+                    <label>Target Group</label>
                     <select id="group-select">
-                        <option value="">-- Choose a group --</option>
+                        <option value="">-- Select a group --</option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label>2. Upload Excel/CSV File</label>
+                    <label>Excel/CSV Data Source</label>
                     <input type="file" id="file-input" accept=".xlsx, .xls, .csv">
-                    <small style="color: #888;">File must have a 'WhatsApp ID' or 'Phone' column.</small>
                 </div>
 
-                <button id="start-btn" class="btn-submit" onclick="startImport()">🚀 Start Import Process</button>
+                <button id="start-btn" class="btn-primary" onclick="startImport()">🚀 Start Import Process</button>
 
                 <div id="log-container">
-                    <div class="log-entry">Waiting for input...</div>
+                    <div class="log-entry">System ready for commands...</div>
                 </div>
             </div>
         </div>
@@ -105,9 +242,14 @@
         }
 
         socket.on('status', (data) => {
+            const badge = document.getElementById('status-badge');
+            const text = document.getElementById('status-text');
+
             if (data.state === 'connected') {
                 document.getElementById('qr-container').style.display = 'none';
-                document.getElementById('status-text').innerText = "✅ WhatsApp Connected";
+                badge.className = "status-badge online";
+                badge.innerText = "Online";
+                text.innerText = "Connection active. Ready to manage groups.";
                 currentGroups = data.groups;
                 updateGroupUI();
             }
@@ -116,32 +258,30 @@
         socket.on('qr', (url) => {
             document.getElementById('qr-container').style.display = 'block';
             document.getElementById('qr-img').src = url;
+            document.getElementById('status-badge').innerText = "Awaiting Scan";
         });
 
         function updateGroupUI() {
             const select = document.getElementById('group-select');
             const list = document.getElementById('all-groups-list');
             
-            select.innerHTML = '<option value="">-- Choose a group --</option>';
+            select.innerHTML = '<option value="">-- Select a group --</option>';
             list.innerHTML = '';
 
             currentGroups.forEach(g => {
-                // Fill Dropdown
                 const opt = document.createElement('option');
                 opt.value = g.id;
-                opt.innerText = `${g.subject} (${g.memberCount} members)`;
+                opt.innerText = `${g.subject} (${g.memberCount})`;
                 select.appendChild(opt);
 
-                // Fill Table
-                list.innerHTML += `<tr style="border-bottom:1px solid #eee; height:50px;">
+                list.innerHTML += `<tr>
                     <td>${g.subject}</td>
-                    <td>${g.memberCount}</td>
-                    <td><a href="/export/${g.id}" style="color:var(--primary); text-decoration:none; font-weight:bold;">Export</a></td>
+                    <td><span style="color:var(--text-muted)">${g.memberCount} members</span></td>
+                    <td><a href="/export/${g.id}" style="color:var(--primary); text-decoration:none; font-weight:700; font-size:0.9rem;">EXPORT CSV</a></td>
                 </tr>`;
             });
         }
 
-        // --- Import Logic ---
         function addLog(msg, type = '') {
             const container = document.getElementById('log-container');
             const entry = document.createElement('div');
@@ -156,43 +296,34 @@
             const file = document.getElementById('file-input').files[0];
 
             if (!groupId || !file) {
-                alert("Please select a group and a file first!");
+                alert("Missing data: Please select a group and a file.");
                 return;
             }
 
             document.getElementById('start-btn').disabled = true;
-            addLog(`Starting import for group: ${groupId}`, 'success');
+            addLog(`Initializing batch import...`, 'success');
 
             const formData = new FormData();
             formData.append('file', file);
             formData.append('groupId', groupId);
 
             try {
-                const response = await fetch('/upload-import', {
-                    method: 'POST',
-                    body: formData
-                });
+                const response = await fetch('/upload-import', { method: 'POST', body: formData });
                 const result = await response.json();
-                addLog(`File parsed. Found ${result.count} contacts.`, 'success');
+                addLog(`File analysis complete: Found ${result.count} contacts.`, 'success');
             } catch (err) {
-                addLog(`Error: ${err.message}`, 'error');
+                addLog(`Critical Error: ${err.message}`, 'error');
                 document.getElementById('start-btn').disabled = false;
             }
         }
 
-        // Listen for real-time progress from server
         socket.on('import-progress', (data) => {
             let type = '';
             if (data.status === 'success') type = 'success';
             if (data.status === 'warn') type = 'warn';
             if (data.status === 'error') type = 'error';
-            
             addLog(data.message, type);
-            
-            if (data.done) {
-                document.getElementById('start-btn').disabled = false;
-                addLog("🏁 Process Completed.", "success");
-            }
+            if (data.done) document.getElementById('start-btn').disabled = false;
         });
     </script>
 </body>
