@@ -1,15 +1,27 @@
-📄 README.md
 Quantivo CRM | AI-Powered WhatsApp Automation
-A professional, high-performance CRM built on the Baileys V7 Engine, designed for bulk member management and AI-driven customer engagement.
+High-performance CRM built on Baileys V7 Engine (Multi-Device) with Mandatory Data-Sync Guard.
 
 🚀 Key Features
-AI Auto-Reply: Integrated with Google Gemini 1.5 Flash for RAG-based automated responses.
+Smart Sync Engine (New): دارای مکانیزم انتظار ۶۰ ثانیه‌ای برای پایداری کامل دیتا و جلوگیری از تکرار گروه‌ها در groupsCache.
 
-V7 Engine Power: Utilizes LID mapping and human-like delays to ensure account safety.
+V7 Engine Power: استفاده از LID Mapping و شبیه‌سازی دقیق Browser برای کاهش ریسک بن (Anti-Ban).
 
-Bulk Operations: Export group members to CSV and import contacts via Excel/CSV.
+Bulk Operations: استخراج اعضای گروه به CSV و وارد کردن انبوه مخاطبین از طریق Excel/CSV.
 
-Knowledge Base: Fully customizable "brain" for the AI via the dashboard.
+Fallback Fetch: در صورت عدم دریافت تاریخچه خودکار از واتس‌اپ، سیستم پس از ۶۰ ثانیه به صورت اجباری (Forced Fetch) لیست گروه‌ها را واکشی می‌کند.
+
+AI Auto-Reply: یکپارچه‌سازی شده با Google Gemini 1.5 Flash برای پاسخگویی هوشمند (غیرفعال در نسخه دمو).
+
+🛠️ Architecture & Logic Flow
+برای درک بهتر تیم توسعه، منطق اتصال در نسخه جدید به شرح زیر است:
+
+Connection: برقراری اتصال و نمایش QR.
+
+Sync Window (60s): قفل شدن رابط کاربری و سایدبار برای جلوگیری از درخواست‌های نامعتبر تا زمان پایداری دیتا.
+
+Data Hydration: دریافت گروه‌ها از رویداد messaging-history.set.
+
+Fallback Trigger: اگر بعد از ۶۰ ثانیه دیتایی دریافت نشد، متد finalizeSync لیست را مستقیماً از سرورهای واتس‌اپ بیرون می‌کشد.
 
 🛠️ Installation & Local Setup
 Clone the repository:
@@ -21,45 +33,35 @@ Install dependencies:
 
 Bash
 npm install
-Environment Setup:
-Ensure you have a settings.json and auth_store/ folder (managed by the app).
-
 Run the app:
 
 Bash
 node server.js
-Access at http://localhost:3000
+Access at: http://localhost:3000
 
-☁️ Cloudflare Deployment Guide (Cloudflare Tunnel)
-Since WhatsApp requires a persistent connection (Socket.io + Long-running process), you cannot run the server.js directly on a Cloudflare Worker. The best approach is to use Cloudflare Tunnel. This allows you to run the server on your local machine or a VPS in Yerevan while exposing it securely through a Cloudflare .dev or custom domain.
+☁️ Cloudflare Deployment (Tunnel Guide)
+از آنجایی که واتس‌اپ نیاز به یک Persistent Connection (اتصال مداوم) دارد، اجرای مستقیم روی Cloudflare Workers امکان‌پذیر نیست. استفاده از Cloudflare Tunnel پیشنهاد می‌شود:
 
-1. Install Cloudflared
-On your server/machine, install the Cloudflare tunnel client:
+Install Cloudflared:
 
-Linux: sudo apt install cloudflared
+sudo apt install cloudflared (Linux)
 
-Mac: brew install cloudflare/cloudflare/cloudflared
+Auth & Create Tunnel:
 
-2. Authenticate & Create Tunnel
 Bash
 cloudflared tunnel login
 cloudflared tunnel create quantivo-crm
-3. Route Traffic
-Replace your-domain.com with your actual domain or use a tunnel-specific hostname:
-
-Bash
-cloudflared tunnel route dns quantivo-crm crm.your-domain.com
-4. Run the Tunnel
-Point the tunnel to your local Quantivo port:
+Run & Route:
 
 Bash
 cloudflared tunnel run --url http://localhost:3000 quantivo-crm
-5. Why use this for Quantivo?
-No Open Ports: You don't need to open Port 3000 on your router or firewall.
+مزیت اصلی: تمام کلیدهای امنیتی در پوشه auth_store روی سرور محلی شما باقی می‌ماند و هرگز وارد فضای ابری نمی‌شود.
 
-SSL Included: Cloudflare provides the HTTPS certificate automatically.
+⚠️ Security & Development Notes
+Anti-Ban Safety: به هیچ عنوان زمان delay را در تابع processImports کاهش ندهید. این بازه (۳۰ تا ۵۰ ثانیه) برای شبیه‌سازی رفتار انسانی تنظیم شده است.
 
-V7 Security: Since the code still runs on your machine, your auth_store (WhatsApp keys) stays local and never touches the cloud.
+Sync Logic: اگر گروه‌ها در داشبورد نمایش داده نمی‌شوند، حتماً کنسول سرور را چک کنید تا از وضعیت Timeout in AwaitingInitialSync مطلع شوید.
 
-⚠️ Security Reminder
-As a software engineer, remember to keep your .env and settings.json out of your public commits.
+LID Mapping: این نسخه از LID (Identity شناسایی جدید واتس‌اپ) پشتیبانی می‌کند تا پایداری سشن‌ها افزایش یابد.
+
+Quantivo CRM Team - Reliability over Speed.

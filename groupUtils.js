@@ -31,9 +31,9 @@ async function exportGroupMembers(group, sock) {
         // 2. If not, check the internal lidMapping store
         if (p.phoneNumber) {
             phone = p.phoneNumber;
-        } else if (isLid && sock) {
+        } else if (isLid && sock?.signalRepository?.lidMapping) {
             try {
-                // Deep Search: Attempt to find PN for this LID in the session store
+                // v7: getPNForLID from internal store
                 const foundPn = await sock.signalRepository.lidMapping.getPNForLID(p.id);
                 phone = foundPn || 'Hidden (LID)';
             } catch (e) {
@@ -66,8 +66,34 @@ function isUserAdmin(group, myJid) {
 }
 
 /**
+ * Extract normalized phone number from JID string or Excel value.
+ * Handles: 989112523756@s.whatsapp.net, 989112523756:0@s.whatsapp.net, +98 911 252 3756
+ */
+function toNormalizedPhone(jidOrValue) {
+    if (!jidOrValue) return '';
+    const str = String(jidOrValue).trim();
+    const beforeDomain = str.split('@')[0] || '';
+    const phonePart = beforeDomain.split(':')[0] || '';
+    return phonePart.replace(/\D/g, '');
+}
+
+/**
+ * Extract phone from group participant — compare by phone number, not JID.
+ * v7 Contact: id + (phoneNumber when id is LID, or lid when id is PN).
+ * Handles: p.phoneNumber (LID), p.id = 989112523756@s.whatsapp.net (PN), etc.
+ */
+function extractPhoneFromParticipant(p) {
+    if (!p) return '';
+    if (p.phoneNumber) return String(p.phoneNumber).replace(/\D/g, '');
+    // PN format: id is user@s.whatsapp.net
+    const beforeDomain = (p.id || '').split('@')[0] || '';
+    const phonePart = beforeDomain.split(':')[0] || '';
+    return phonePart.replace(/\D/g, '');
+}
+
+/**
  * 3. Parse JIDs from Excel/CSV for Importing
- * Enhanced to clean raw phone numbers into valid WhatsApp JIDs
+ * Returns raw entries (phone or JID strings) - caller normalizes to phones for comparison
  */
 function getJidsFromFile(filePath) {
     try {
@@ -84,13 +110,9 @@ function getJidsFromFile(filePath) {
             // If it's just a number, clean it and add the domain
             if (!cleaned.includes('@')) {
                 cleaned = cleaned.replace(/\D/g, ''); // Remove all non-numeric chars (+, -, spaces)
-                
-                // Optional: Force country code if missing (example for Iran 98)
-                // if (!cleaned.startsWith('98')) cleaned = '98' + cleaned; 
-                
                 return `${cleaned}@s.whatsapp.net`;
             }
-            
+
             return cleaned;
         }).filter(jid => jid !== null);
     } catch (err) {
@@ -99,4 +121,4 @@ function getJidsFromFile(filePath) {
     }
 }
 
-module.exports = { exportGroupMembers, isUserAdmin, getJidsFromFile };
+module.exports = { exportGroupMembers, isUserAdmin, getJidsFromFile, toNormalizedPhone, extractPhoneFromParticipant };

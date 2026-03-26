@@ -26,7 +26,8 @@ async function init() {
         }
 
         if (connection === 'open') {
-            const myJid = sock.user.id.split(':')[0] + '@s.whatsapp.net';
+            // v7: use sock.user.id directly (can be LID or PN)
+            const myJid = sock.user?.id || '';
             const rawGroups = await sock.groupFetchAllParticipating();
             
             // Format groups for the UI
@@ -48,7 +49,7 @@ app.get('/export/:groupId', async (req, res) => {
     const group = allGroups[groupId];
 
     if (group) {
-        await exportGroupMembers(group);
+        await exportGroupMembers(group, sock);
         const fileName = `${group.subject.replace(/[/\\?%*:|"<>\s]/g, '_')}.csv`;
         res.download(`./exports/${fileName}`);
     } else {

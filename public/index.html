@@ -11,6 +11,8 @@
         :root {
             --primary: #25d366;
             --primary-dark: #1da851;
+            --warning: #f59e0b;
+            --danger: #f43f5e;
             --dark: #0f172a;
             --sidebar-bg: #1e293b;
             --bg: #f8fafc;
@@ -21,278 +23,92 @@
             --radius: 12px;
         }
 
-        * {
-            box-sizing: border-box;
-            transition: all 0.2s ease;
-        }
+        * { box-sizing: border-box; transition: all 0.2s ease; }
+        body { font-family: 'Inter', sans-serif; margin: 0; display: flex; background: var(--bg); color: var(--text-main); height: 100vh; overflow: hidden; }
+        
+        /* Sidebar Styles */
+        #sidebar { width: 280px; background: var(--sidebar-bg); color: white; display: flex; flex-direction: column; padding: 20px; box-shadow: 4px 0 10px rgba(0, 0, 0, 0.05); }
+        #sidebar .logo { font-size: 1.5rem; font-weight: 800; padding: 20px 10px; margin-bottom: 30px; color: var(--primary); border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        
+        .nav-item { padding: 14px 18px; cursor: pointer; border-radius: var(--radius); margin-bottom: 10px; display: flex; align-items: center; font-weight: 500; color: #cbd5e1; text-decoration: none; }
+        .nav-item.disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+        .nav-item:hover:not(.disabled) { background: rgba(255, 255, 255, 0.05); color: white; }
+        .nav-item.active { background: var(--primary); color: white; box-shadow: 0 10px 15px -3px rgba(37, 211, 102, 0.3); }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            display: flex;
-            background: var(--bg);
-            color: var(--text-main);
-            height: 100vh;
-            overflow: hidden;
-        }
+        /* Main Content */
+        #main-content { flex: 1; padding: 40px; overflow-y: auto; position: relative; }
+        .page { display: none; max-width: 1000px; margin: 0 auto; animation: fadeIn 0.4s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .card { background: var(--white); padding: 30px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); margin-bottom: 30px; }
+        
+        /* Sync UI */
+        #sync-box { text-align: center; padding: 40px 0; }
+        .timer-display { font-size: 3rem; font-weight: 800; color: var(--dark); margin: 10px 0; }
+        .progress-container { width: 100%; background: #edf2f7; height: 14px; border-radius: 7px; margin: 20px 0; overflow: hidden; }
+        .progress-bar { height: 100%; background: var(--primary); width: 0%; transition: width 1s linear; position: relative; }
+        .progress-bar::after { content: ""; position: absolute; top: 0; left: 0; bottom: 0; right: 0; background-image: linear-gradient(-45deg, rgba(255,255,255,.2) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.2) 50%, rgba(255,255,255,.2) 75%, transparent 75%, transparent); background-size: 50px 50px; animation: moveStripes 2s linear infinite; }
+        @keyframes moveStripes { from { background-position: 0 0; } to { background-position: 50px 0; } }
 
-        /* Sidebar Navigation */
-        #sidebar {
-            width: 280px;
-            background: var(--sidebar-bg);
-            color: white;
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            box-shadow: 4px 0 10px rgba(0, 0, 0, 0.05);
-        }
+        .status-badge { display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; background: #e2e8f0; }
+        .status-badge.online { background: #dcfce7; color: #16a34a; }
+        .status-badge.syncing { background: #fef3c7; color: #d97706; }
 
-        #sidebar .logo {
-            font-size: 1.5rem;
-            font-weight: 800;
-            letter-spacing: -1px;
-            padding: 20px 10px;
-            margin-bottom: 30px;
-            color: var(--primary);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        nav {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        .nav-item {
-            padding: 14px 18px;
-            cursor: pointer;
-            border-radius: var(--radius);
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            font-weight: 500;
-            color: #cbd5e1;
-            text-decoration: none;
-        }
-
-        .nav-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: white;
-        }
-
-        .nav-item.active {
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 10px 15px -3px rgba(37, 211, 102, 0.3);
-        }
-
-        /* Main Content Area */
-        #main-content {
-            flex: 1;
-            padding: 40px;
-            overflow-y: auto;
-            position: relative;
-        }
-
-        h1 {
-            font-weight: 700;
-            font-size: 1.8rem;
-            margin-bottom: 30px;
-            color: var(--dark);
-        }
-
-        .page {
-            display: none;
-            max-width: 1000px;
-            margin: 0 auto;
-            animation: fadeIn 0.4s ease;
-        }
-
-        .page.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Card Component */
-        .card {
-            background: var(--white);
-            padding: 30px;
-            border-radius: var(--radius);
-            border: 1px solid var(--border);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            margin-bottom: 30px;
-        }
-
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            background: #fee2e2;
-            color: #ef4444;
-        }
-
-        .status-badge.online {
-            background: #dcfce7;
-            color: #16a34a;
-        }
-
-        /* Form Controls */
-        .form-group {
-            margin-bottom: 25px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 10px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-        }
-
-        select,
-        input[type="file"] {
-            width: 100%;
-            padding: 14px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: #fcfcfc;
-            font-size: 1rem;
-            outline: none;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 16px 24px;
-            border-radius: var(--radius);
-            cursor: pointer;
-            font-weight: 700;
-            width: 100%;
-            font-size: 1rem;
-            box-shadow: 0 4px 14px 0 rgba(37, 211, 102, 0.39);
-        }
-
-        .btn-primary:disabled {
-            background: #cbd5e1;
-            box-shadow: none;
-        }
-
-        /* Log Terminal */
-        #log-container {
-            background: #0f172a;
-            color: #94a3b8;
-            padding: 20px;
-            border-radius: var(--radius);
-            font-family: 'SFMono-Regular', Consolas, monospace;
-            font-size: 0.85rem;
-            height: 300px;
-            overflow-y: auto;
-            margin-top: 20px;
-        }
-
-        .log-entry {
-            margin-bottom: 8px;
-            border-left: 2px solid #334155;
-            padding-left: 12px;
-        }
-
-        .log-success {
-            color: var(--primary);
-            border-color: var(--primary);
-        }
-
-        .log-warn {
-            color: #f59e0b;
-            border-color: #f59e0b;
-        }
-
-        .log-error {
-            color: #f43f5e;
-            border-color: #f43f5e;
-        }
-
-        /* Logout Overlay */
-        #logout-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(15, 23, 42, 0.9);
-            z-index: 9999;
-            color: white;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-        }
+        /* Tables & Inputs */
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid var(--border); }
+        .btn-primary { background: var(--primary); color: white; border: none; padding: 16px; border-radius: var(--radius); cursor: pointer; font-weight: 700; width: 100%; font-size: 1rem; }
+        .btn-primary:disabled { background: #cbd5e1; cursor: not-allowed; }
+        
+        #log-container { background: #0f172a; color: #94a3b8; padding: 20px; border-radius: var(--radius); font-family: monospace; height: 250px; overflow-y: auto; margin-top: 20px; }
     </style>
 </head>
 
 <body>
-
-    <div id="logout-overlay">
-        <p>🚪 Wiping session and disconnecting...</p>
-    </div>
-
     <aside id="sidebar">
         <div class="logo">QUANTIVO</div>
-        <nav>
-            <div class="nav-item active" onclick="showPage('overview-page', event)"><span>🏠</span> &nbsp; System
-                Overview</div>
-            <div class="nav-item" onclick="showPage('groups-page', event)"><span>🌍</span> &nbsp; Group List</div>
-            <div class="nav-item" onclick="showPage('add-members-page', event)"><span>➕</span> &nbsp; Add Members</div>
-            <div class="nav-item" onclick="showPage('settings-page', event)"><span>⚙️</span> &nbsp; AI Settings</div>
-
-            <div class="nav-item" onclick="handleLogout(event)" style="margin-top: auto; color: #f43f5e;">
-                <span>🚪</span> &nbsp; Logout Session
-            </div>
+        <nav id="main-nav">
+            <div class="nav-item active disabled" id="nav-overview" onclick="showPage('overview-page', event)"><span>🏠</span> &nbsp; Overview</div>
+            <div class="nav-item disabled" id="nav-groups" onclick="showPage('groups-page', event)"><span>🌍</span> &nbsp; Group List</div>
+            <div class="nav-item disabled" id="nav-add" onclick="showPage('add-members-page', event)"><span>➕</span> &nbsp; Add Members</div>
+            <div class="nav-item" onclick="handleLogout()" style="margin-top: auto; color: var(--danger);"><span>🚪</span> &nbsp; Logout</div>
         </nav>
     </aside>
 
     <main id="main-content">
         <div id="overview-page" class="page active">
-            <h1>System Status</h1>
+            <h1 id="page-title">Initializing...</h1>
             <div class="card">
                 <div id="status-badge" class="status-badge">Disconnected</div>
-                <p id="status-text" style="margin-top: 15px; color: var(--text-muted);">Initializing WhatsApp module...
-                </p>
+                
+                <div id="qr-box" style="display:none; text-align: center; margin-top: 30px;">
+                    <img id="qr-img" width="260">
+                    <p>Scan with your WhatsApp mobile app</p>
+                </div>
 
-                <div id="qr-container" style="display:none; text-align: center; margin-top: 30px;">
-                    <img id="qr-img" src="" width="260">
-                    <p style="margin-top: 20px; font-weight: 600;">Scan to connect your account</p>
+                <div id="sync-box" style="display:none;">
+                    <p id="sync-msg">Establishing secure connection...</p>
+                    <div class="progress-container">
+                        <div id="sync-progress" class="progress-bar"></div>
+                    </div>
+                    <p style="font-size: 0.9rem; color: var(--text-muted);">Please don't close this window. We're fetching your data.</p>
+                </div>
+
+                <div id="ready-msg" style="display:none; margin-top: 20px;">
+                    <p>✅ Connection successful. All modules are now active.</p>
                 </div>
             </div>
         </div>
 
         <div id="groups-page" class="page">
-            <h1>Participated Groups</h1>
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse;">
-                    <thead>
-                        <tr style="text-align: left; color: var(--text-muted);">
-                            <th style="padding: 15px;">Group Name</th>
-                            <th>Members</th>
-                            <th style="text-align: right;">Actions</th>
-                        </tr>
+            <h1>Your WhatsApp Groups</h1>
+            <div class="card" style="padding: 0;">
+                <table>
+                    <thead style="background: #f8fafc;">
+                        <tr><th>Group Name</th><th>Members</th><th style="text-align:right;">Action</th></tr>
                     </thead>
-                    <tbody id="all-groups-list"></tbody>
+                    <tbody id="group-list"></tbody>
                 </table>
             </div>
         </div>
@@ -300,45 +116,16 @@
         <div id="add-members-page" class="page">
             <h1>Bulk Member Import</h1>
             <div class="card">
-                <div class="form-group">
-                    <label>Target Group</label>
-                    <select id="group-select">
-                        <option value="">-- Select a group --</option>
-                    </select>
+                <div style="margin-bottom: 20px;">
+                    <label style="display:block; margin-bottom:8px; font-weight:600;">Target Group</label>
+                    <select id="group-select" style="width:100%; padding:12px; border-radius:8px; border:1px solid var(--border);"></select>
                 </div>
-
-                <div class="form-group">
-                    <label>Excel/CSV Data Source</label>
-                    <input type="file" id="file-input" accept=".xlsx, .xls, .csv">
+                <div style="margin-bottom: 20px;">
+                    <label style="display:block; margin-bottom:8px; font-weight:600;">Contact List (CSV/Excel)</label>
+                    <input type="file" id="file-input" style="width:100%;">
                 </div>
-
-                <button id="start-btn" class="btn-primary" onclick="startImport()">🚀 Start Import Process</button>
-
-                <div id="log-container">
-                    <div class="log-entry">System ready for commands...</div>
-                </div>
-            </div>
-        </div>
-
-        <div id="settings-page" class="page">
-            <h1>AI Automation Settings</h1>
-            <div class="card">
-                <div class="form-group" style="display: flex; align-items: center; justify-content: space-between;">
-                    <label style="margin-bottom: 0;">Enable Auto-Reply</label>
-                    <input type="checkbox" id="ai-toggle" style="width: 40px; height: 20px; cursor: pointer;">
-                </div>
-                <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
-                <div class="form-group">
-                    <label>Gemini API Key</label>
-                    <input type="text" id="ai-apikey" placeholder="Enter your Google Gemini API Key">
-                </div>
-                <div class="form-group">
-                    <label>Knowledge Base (Context for AI)</label>
-                    <textarea id="ai-kb"
-                        style="width: 100%; height: 200px; padding: 15px; border-radius: var(--radius); border: 1px solid var(--border); font-family: inherit;"
-                        placeholder="Describe your business, prices, and services here..."></textarea>
-                </div>
-                <button class="btn-primary" onclick="saveSettings()">💾 Save AI Configuration</button>
+                <button id="start-btn" class="btn-primary" onclick="startImport()">🚀 Start Process</button>
+                <div id="log-container"></div>
             </div>
         </div>
     </main>
@@ -347,155 +134,106 @@
         const socket = io();
         let currentGroups = [];
 
-        // FIXED: Added event parameter and stopPropagation check
+        // مدیریت تغییر صفحات
         function showPage(pageId, event) {
-            if (event) event.stopPropagation();
-
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-
             document.getElementById(pageId).classList.add('active');
-
-            // Only add active class if it was triggered by a click (not auto-load)
-            if (event && event.currentTarget) {
-                event.currentTarget.classList.add('active');
-            }
+            if (event) event.currentTarget.classList.add('active');
         }
 
         socket.on('status', (data) => {
             const badge = document.getElementById('status-badge');
-            const text = document.getElementById('status-text');
+            const qrBox = document.getElementById('qr-box');
+            const syncBox = document.getElementById('sync-box');
+            const progress = document.getElementById('sync-progress');
+            const navItems = document.querySelectorAll('.nav-item');
+            const pageTitle = document.getElementById('page-title');
 
-            if (data.state === 'connected') {
-                document.getElementById('qr-container').style.display = 'none';
+            if (data.state === 'qr_ready') {
+                qrBox.style.display = 'block';
+                syncBox.style.display = 'none';
+                badge.innerText = "Awaiting Scan";
+                pageTitle.innerText = "Connect WhatsApp";
+            } 
+            else if (data.state === 'syncing') {
+                qrBox.style.display = 'none';
+                syncBox.style.display = 'block';
+                badge.className = "status-badge syncing";
+                badge.innerText = "Syncing...";
+                pageTitle.innerText = "Synchronizing Data";
+                
+                document.getElementById('sync-msg').innerText = data.message;
+                progress.style.width = (data.progress || 0) + "%";
+            } 
+            else if (data.state === 'ready') {
+                syncBox.style.display = 'none';
+                qrBox.style.display = 'none';
+                document.getElementById('ready-msg').style.display = 'block';
                 badge.className = "status-badge online";
                 badge.innerText = "Online";
-                text.innerText = "Connection active. Ready to manage groups.";
+                pageTitle.innerText = "System Overview";
+
+                // فعال کردن منوها
+                navItems.forEach(item => item.classList.remove('disabled'));
+                
                 currentGroups = data.groups;
-                updateGroupUI();
+                updateUI();
             }
         });
 
-        socket.on('qr', (url) => {
-            document.getElementById('qr-container').style.display = 'block';
+        socket.on('qr', url => {
             document.getElementById('qr-img').src = url;
-            document.getElementById('status-badge').innerText = "Awaiting Scan";
-            document.getElementById('status-badge').className = "status-badge";
         });
 
-        function updateGroupUI() {
+        function updateUI() {
+            const list = document.getElementById('group-list');
             const select = document.getElementById('group-select');
-            const list = document.getElementById('all-groups-list');
-
-            select.innerHTML = '<option value="">-- Select a group --</option>';
             list.innerHTML = '';
+            select.innerHTML = '';
 
             currentGroups.forEach(g => {
-                const opt = document.createElement('option');
-                opt.value = g.id;
-                opt.innerText = `${g.subject} (${g.memberCount})`;
-                select.appendChild(opt);
-
-                list.innerHTML += `
-                <tr style="border-bottom: 1px solid var(--border);">
-                    <td style="padding: 20px 15px; font-weight: 600;">${g.subject}</td>
-                    <td style="color:var(--text-muted)">${g.memberCount} members</td>
-                    <td style="text-align: right;"><a href="/export/${g.id}" style="color:var(--primary); text-decoration:none; font-weight:700;">EXPORT CSV</a></td>
+                list.innerHTML += `<tr>
+                    <td><b>${g.subject}</b></td>
+                    <td>${g.memberCount} members</td>
+                    <td style="text-align:right;"><a href="/export/${g.id}" style="color:var(--primary); font-weight:bold; text-decoration:none;">EXPORT</a></td>
                 </tr>`;
+                select.innerHTML += `<option value="${g.id}">${g.subject}</option>`;
             });
-        }
-
-        function addLog(msg, type = '') {
-            const container = document.getElementById('log-container');
-            const entry = document.createElement('div');
-            entry.className = `log-entry ${type ? 'log-' + type : ''}`;
-            entry.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
-            container.appendChild(entry);
-            container.scrollTop = container.scrollHeight;
         }
 
         async function startImport() {
-            const groupId = document.getElementById('group-select').value;
+            const gid = document.getElementById('group-select').value;
             const file = document.getElementById('file-input').files[0];
+            if(!gid || !file) return alert("Please select group and file.");
 
-            if (!groupId || !file) {
-                alert("Missing data: Please select a group and a file.");
-                return;
-            }
+            const fd = new FormData();
+            fd.append('file', file); fd.append('groupId', gid);
 
             document.getElementById('start-btn').disabled = true;
-            addLog(`Initializing batch import...`, 'success');
-
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('groupId', groupId);
-
             try {
-                const response = await fetch('/upload-import', { method: 'POST', body: formData });
-                const result = await response.json();
-                addLog(`File analysis complete: Found ${result.count} contacts.`, 'success');
-            } catch (err) {
-                addLog(`Critical Error: ${err.message}`, 'error');
-                document.getElementById('start-btn').disabled = false;
-            }
+                const res = await fetch('/upload-import', { method: 'POST', body: fd });
+                addLog("File uploaded. Analyzing contacts...");
+            } catch (e) { addLog("Upload failed."); }
         }
 
-        socket.on('import-progress', (data) => {
-            let type = '';
-            if (data.status === 'success') type = 'success';
-            if (data.status === 'warn') type = 'warn';
-            if (data.status === 'error') type = 'error';
-            addLog(data.message, type);
-            if (data.done) document.getElementById('start-btn').disabled = false;
+        socket.on('import-progress', d => {
+            addLog(d.message);
+            if(d.done) document.getElementById('start-btn').disabled = false;
         });
 
-        // FIXED: handleLogout now prevents propagation and uses an overlay
-        async function handleLogout(event) {
-            if (event) event.stopPropagation();
+        function addLog(msg) {
+            const container = document.getElementById('log-container');
+            container.innerHTML += `<div style="margin-bottom:5px; border-left:2px solid var(--primary); padding-left:10px;">[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+            container.scrollTop = container.scrollHeight;
+        }
 
-            if (confirm("Are you sure? This will disconnect WhatsApp and require a new QR scan.")) {
-                try {
-                    document.getElementById('logout-overlay').style.display = 'flex';
-
-                    const response = await fetch('/logout', { method: 'POST' });
-                    if (response.ok) {
-                        // Small delay to let the backend finish deleting files
-                        setTimeout(() => window.location.reload(), 1500);
-                    }
-                } catch (err) {
-                    document.getElementById('logout-overlay').style.display = 'none';
-                    alert("Logout failed: " + err.message);
-                }
+        async function handleLogout() {
+            if(confirm("Logout?")) {
+                await fetch('/logout', { method: 'POST' });
+                window.location.reload();
             }
         }
-
-        async function loadSettings() {
-            const res = await fetch('/api/settings');
-            const settings = await res.json();
-            document.getElementById('ai-toggle').checked = settings.autoReply;
-            document.getElementById('ai-apikey').value = settings.apiKey;
-            document.getElementById('ai-kb').value = settings.knowledgeBase;
-        }
-
-        async function saveSettings() {
-            const settings = {
-                autoReply: document.getElementById('ai-toggle').checked,
-                apiKey: document.getElementById('ai-apikey').value,
-                knowledgeBase: document.getElementById('ai-kb').value
-            };
-
-            const res = await fetch('/api/settings', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(settings)
-            });
-
-            if (res.ok) alert("Settings saved successfully!");
-        }
-
-        // Call loadSettings when the app starts
-        window.onload = loadSettings;
     </script>
 </body>
-
 </html>

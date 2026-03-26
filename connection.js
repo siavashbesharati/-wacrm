@@ -1,13 +1,17 @@
-const { default: makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion } = require('@whiskeysockets/baileys');
+const { default: makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion, makeCacheableSignalKeyStore } = require('@whiskeysockets/baileys');
 const qrcode = require('qrcode-terminal');
 
 async function connectToWhatsApp() {
     const { state, saveCreds } = await useMultiFileAuthState('auth_store');
     const { version } = await fetchLatestBaileysVersion();
 
+    // v7: auth must use creds + makeCacheableSignalKeyStore(keys) for LID-mapping support
     const sock = makeWASocket({
         version,
-        auth: state,
+        auth: {
+            creds: state.creds,
+            keys: makeCacheableSignalKeyStore(state.keys),
+        },
         // Remove printQRInTerminal: true to stop the warning
         browser: ["Chrome", "MacOS", "1.0.0"]
     });
